@@ -1,0 +1,7 @@
+---
+- name: Running Scripts
+  hosts: all
+  tasks:
+    - name: Running scripts
+      shell: /home/devops/test.sh >> test.log
+
