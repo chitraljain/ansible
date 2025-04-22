@@ -1,0 +1,32 @@
+---
+- name: Cron Setup
+  hosts: all
+  tasks:
+    - name: Add Cron Job
+      cron:
+        name: Run Test Script
+        minute: 22
+        hour: 07
+        day: "*"
+        month: "*"
+        weekday: "*"
+        job: /home/devops/test.sh 
+
+    - name: Comment cron Jobs
+      cron:
+        name: Disable Cron Job
+        job: /home/devops/test.sh 
+        disabled: yes
+
+    - name: Remove Cron
+      cron:
+        name: Run Test Script
+        state: absent
+        user: devops
+
+    - name: Set Environment Variable in cron
+      cron:
+        name: VAR
+        env: yes
+        job: /home/devops/test.sh
+        state: absent
