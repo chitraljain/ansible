@@ -1,0 +1,24 @@
+---
+- name: File Module
+  hosts: all
+  tasks:
+    - name: Creating File
+      file:
+        path: /home/devops/newfile.txt
+        state: touch
+        mode: 0660
+
+    - name: Creating Directory
+      file:
+        path: /home/devops/myfolder
+        state: directory
+
+    - name: Deleting a file
+      file:
+        path: /home/devops/newfile.txt
+        state: absent
+
+    - name: Change Permissions
+      file:
+        path: /home/devops/myfolder
+        mode: 0400     
