@@ -1,0 +1,11 @@
+---
+- name: User Management
+  hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: User Add
+      user:
+        name: ram
+        state: absent
+        remove: yes
