@@ -1,0 +1,9 @@
+---
+- name: Copy Files
+  hosts: all
+  tasks:
+    - name: Copy Files
+      copy:
+        src: /home/devops/myfile.txt
+        dest: /home/devops/
+
