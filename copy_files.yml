@@ -6,4 +6,6 @@
       copy:
         src: /home/devops/myfile.txt
         dest: /home/devops/
+        mode: 0640
+        backup: true
 
