@@ -1,0 +1,37 @@
+[root@DEMEESLX2125 ~]# cat /root/scriptadmin/ansible_monitoring/final_unreachable.yml
+---
+ - name: Print Host Uptime If its Reachable else send mail
+   hosts: all
+   gather_facts: false
+   ignore_unreachable: yes
+
+   tasks:
+     - name: Starting playbook
+       block:
+         - name: Gathering Facts
+           setup:
+             gather_subset: "min,hardware,network"
+
+         - name: Successfully Pinged hosts uptime
+           debug:
+             msg: "{{ (ansible_uptime_seconds/60/60/24) | int }} days"
+
+       rescue:
+         - name: Host was not reachable hence sending mail
+           mail:
+             subject: "Host Unreachable - {{ inventory_hostname }}"
+             subtype: html
+             body:
+               <p>*************** This is an automated host unreachable monitoring mail ***************</p>
+               <p><strong> Hello Team,</strong></p>
+               <p>The Host <strong style="color:red"> {{ inventory_hostname }} </strong> is unreachable.</p>
+               <p style="color:green">Team please check and take action!!! &#128542 &#128561</p>
+               <p><br></p>
+               <p>
+                  <strong><i>Thanks,<i></strong><br>
+                  <strong><i>LINUX TEAM</i></strong>
+               </p>
+             from: gssc.extunix@assaabloy.com
+             to:
+             - gssc.extunix@assaabloy.com
+           delegate_to: localhost
