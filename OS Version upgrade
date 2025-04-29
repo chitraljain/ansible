@@ -1,0 +1,21 @@
+---
+  - name: 'Red Hat OS Version upgrade'
+    hosts: all
+    tasks:
+      - name: taking backup of important files.
+        shell: mkdir /var/tmp/redhat_os_version_upgrade_backup;cd /var/tmp/redhat_os_version_upgrade_backup;df -h>df.txt;ifconfig -a>ifconfig.txt;uname -a>uname.txt;ps -eaf>ps.txt;netstat -a>netstat.txt;cat /etc/fstab >fstab.txt;ip route>route.txt;rpm -qa>rpm.txt
+        register: result
+      - name: Clean yum
+        shell: sudo /usr/bin/yum clean all
+        register: yumclean
+      - name: yum check update
+        shell: sudo /usr/bin/yum check-update > /var/tmp/redhat_os_version_upgrade_backup/yum_check_update.txt
+        register: yumlist_check_update
+        ignore_errors: yes
+      - name: Yum OS version update
+        shell: sudo /usr/bin/yum update -y
+        register: yumupdate
+        ignore_errors: yes
+      - name: Yum OS version update - skipbroken
+        shell: sudo /usr/bin/yum update --skip-broken -y
+        register: yumupdate
