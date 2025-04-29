@@ -1,0 +1,25 @@
+---
+  - name: 'OS Security patching playbook'
+    hosts: all
+    tasks:
+      - name: taking backup of important files.
+        shell: mkdir /var/tmp/security_patching_backup;cd /var/tmp/security_patching_backup;df -h>df.txt;ifconfig -a>ifconfig.txt;uname -a>uname.txt;ps -eaf>ps.txt;netstat -a>netstat.txt;cat /etc/fstab >fstab.txt;ip route>route.txt;rpm -qa>rpm.txt
+        register: result
+      - name: Clean Yum repository
+        shell: sudo /usr/bin/yum clean all
+        register: yumclean
+      - name: Yum list security
+        shell: sudo /usr/bin/yum list-security > /var/tmp/security_patching_backup/yum_list-security.txt
+        register: yumlist_security
+      - name: Yum security update
+        shell: sudo /usr/bin/yum update --security -y
+        register: yumsecurityupdate
+        ignore_errors: yes
+      - name: Yum security update skip-broken
+        shell: sudo /usr/bin/yum update --security -y --skip-broken
+        register: yumsecurityupdateskipb
+        ignore_errors: yes
+      - name: Yum security update allowerasing
+        shell: sudo /usr/bin/yum update --security --skip-broken --nobest --allowerasing -y
+        register: yumsecurityupdateallowes
+        when: ansible_os_family == "RedHat" and ansible_distribution_version >= '8'
