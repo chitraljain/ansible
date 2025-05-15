@@ -1,0 +1,90 @@
+#BF Partition Mounting Weakness - Vulnerability Fix. 
+---
+- hosts: all
+  gather_facts: false
+  become: yes
+  tasks:
+    - name: Backup BESClient directory
+      command: cp -r /var/opt/BESClient/ /var/opt/BESClient_bkp
+
+    - name: Stop besclient service
+      systemd:
+        name: besclient
+        state: stopped
+
+    - name: Move BESClient directory
+      command: mv /var/opt/BESClient /opt/BESClient_var
+
+    - name: Create symbolic link
+      command: ln -s /opt/BESClient_var /var/opt/BESClient
+
+    - name: Start besclient service
+      systemd:
+        name: besclient
+        state: started
+
+    - name: Check besclient service status
+      shell: systemctl status besclient | grep Active
+      register: service_status
+      changed_when: false
+
+    - name: Save Output to File
+      become: no
+      lineinfile:
+        line: |
+                Timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+                Host: "{{ inventory_hostname }}"
+                Status: "{{ service_status.stdout_lines }}"
+        dest: "/home/sac-chijai@ad.global/BFPartition.txt"
+        create: yes
+      delegate_to: localhost
+
+    - debug:
+        var: service_status.stdout_lines
+
+    - name: Email Report to Linux Team
+      mail:
+        from: gssc.extunix@assaabloy.com
+        to: gssc.extunix@assaabloy.com
+        subject: RHEL BF-Partition Mounting Weakness Report
+        subtype: html
+        body: |
+          <B> Hi Team, <BR>
+          Please find the BESClient Service Status of all the assets.</B><BR><BR>
+          {% for host in ansible_play_hosts %}
+          {{ host }}<BR>
+          {{ hostvars[host].service_status.stdout_lines }}
+          <BR><BR>
+          {% endfor %}
+          <BR>
+          <B>Unreachable servers are:</B><BR>
+          {{ ansible_play_hosts_all|difference(ansible_play_hosts) }}<BR>
+          <BR>
+          <B>Thanks & Regards<BR>
+           Linux Team</B>
+      delegate_to: localhost
+      run_once: true
+
+    - name: Email Report to BF Team
+      mail:
+        from: gssc.extunix@assaabloy.com
+        to:
+                - kjell.munkestam@assaabloy.com
+                - stefan.andersson@assaabloy.com
+        cc:
+                - gssc.extunix@assaabloy.com
+                - gssc.extbigfix@assaabloy.com
+        subject: RHEL BF-Partition Mounting Weakness Report
+        subtype: html
+        body: |
+          Note -  This Email is generated via Automated Script. Please revert in case of any clarifications. <BR><BR><BR>
+          Hi Kjell, <BR><BR>
+          We have performed the suggested changes on the assets attached here. Please verify the execution of BF actions.<BR><BR>
+          <BR><BR>
+          <B>Thanks & Regards<BR>
+           Linux Team</B>
+        attach: "/home/sac-chijai@ad.global/BFPartition.txt"
+      delegate_to: localhost
+      run_once: true
+
+...
