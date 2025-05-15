@@ -1,0 +1,44 @@
+#This is a version details playbook
+- name: Version Playbook
+  hosts: all
+  gather_facts: false
+  tasks:
+
+          - name: Check Version
+            shell: cat '/etc/redhat-release'
+            register: ver
+            ignore_errors: yes
+
+          - name: Check kernel
+            shell: uname -r
+            register: krnl
+            ignore_errors: yes
+
+          - debug:
+                  var: ver
+                  var: krnl
+
+
+          - name: Email the scan report
+            mail:
+                    from: gssc.extunix@assaabloy.com
+                    to: gssc.extunix@assaabloy.com
+                    subject: Linux Server Version Report
+                    subtype: html
+                    body: |
+                           <B> Hi Team, <BR>
+                            Please find the server version details of all the assets.</B><BR><BR>
+                            {% for host in ansible_play_hosts %}
+                            #{{ host }}&nbsp{{ hostvars[host].ver.stdout_lines }}<BR>
+                            {{ hostvars[host].krnl.stdout_lines }}
+                            <BR><BR>
+                            {% endfor %}
+                            <BR>
+                            <B>Unreachable servers are:</B><BR>
+                            {{ ansible_play_hosts_all|difference(ansible_play_hosts) }}<BR>
+                            <BR>
+                            <B>Thanks & Regards<BR>
+                            Linux Team</B>
+            delegate_to: localhost
+            run_once: true
+
