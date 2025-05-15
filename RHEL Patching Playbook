@@ -1,0 +1,25 @@
+#This is basic playbook for Patching
+- name: Splunk Patching
+  hosts: all
+  gather_facts: false
+  tasks:
+          - name: Gather Time
+            shell: 'date +%Y-%m-%d'
+            register: dt
+
+          - name: Cache clear
+            shell: 'dnf clean all'
+            register: cache
+
+          - name: Security Patch
+            shell: 'dnf update --security'
+            register: sec
+
+          - name: Email the report
+            mail:
+                    from: gssc.extunix@assaabloy.com
+                    to: chitral.jain@assaabloy.com
+                    subject: Splunk servers patching - {{ dt.stdout_lines }}
+                    subtype: html
+                    body
+
