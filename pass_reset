@@ -1,0 +1,13 @@
+---
+- name: Reset user password on Linux hosts
+  hosts: all
+  become: yes
+  vars:
+    username: "daaadm"
+    new_password: ""  # Change to desired password
+  tasks:
+    - name: Reset password for user
+      ansible.builtin.user:
+        name: "{{ username }}"
+        password: "{{ new_password | password_hash('sha512') }}"
+      tags: reset_password
