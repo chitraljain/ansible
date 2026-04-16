@@ -1,0 +1,46 @@
+---
+- name: Ensure PubkeyAcceptedKeyTypes is set
+  hosts: all
+  become: yes
+  vars:
+    ssh_config_file: /etc/ssh/sshd_config
+    required_line: "PubkeyAcceptedKeyTypes +ssh-rsa"
+
+  tasks:
+
+    - name: Check if required line exists
+      ansible.builtin.shell: grep -Fxq "{{ required_line }}" {{ ssh_config_file }}
+      register: line_check
+      ignore_errors: true
+      changed_when: false
+
+    - name: Backup sshd_config if line is missing
+      ansible.builtin.copy:
+        src: "{{ ssh_config_file }}"
+        dest: "{{ ssh_config_file }}.bak"
+        remote_src: yes
+        mode: '0600'
+      when: line_check.rc != 0
+
+    - name: Append required line if missing
+      ansible.builtin.lineinfile:
+        path: "{{ ssh_config_file }}"
+        line: "{{ required_line }}"
+        insertafter: EOF
+        state: present
+      when: line_check.rc != 0
+
+    - name: Restart sshd service if change was made
+      ansible.builtin.systemd:
+        name: sshd
+        state: restarted
+      when: line_check.rc != 0
+
+    - name: Get sshd service status
+      ansible.builtin.command: systemctl status sshd
+      register: ssh_status
+      changed_when: false
+
+    - name: Show sshd service status
+      ansible.builtin.debug:
+        var: ssh_status.stdout_lines
